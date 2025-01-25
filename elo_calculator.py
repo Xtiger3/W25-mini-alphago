@@ -1,6 +1,5 @@
 import pickle
 from typing import Any
-from mcts_strategies import RandomStrategy, Strategy
 from board import Board
 from bot import Bot
 from random import randint
@@ -141,8 +140,8 @@ if __name__ == "__main__":
     elo = Elo_calculator(game=go, prev_elo_data= "elo_data.pkl")
     print(elo.__dict__)
 
-    random_player1 = RandomStrategy()
-    random_player2 = RandomStrategy()
+    random_player1 = Bot()
+    random_player2 = Bot()
 
     elo.register_bot(name= "bob", strategy= random_player1)
     elo.register_bot(name = "bobette", strategy= random_player2)
@@ -150,5 +149,5 @@ if __name__ == "__main__":
     for i in range(10):
         print(elo.play_match("bob", "bobette"))
 
-    print(elo.__dict__)
+   
     elo.save("elo_data.pkl")

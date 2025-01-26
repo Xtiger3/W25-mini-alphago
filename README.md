@@ -1,6 +1,15 @@
-Welcome to MDST mini-Alphago. This is the starter code that we will be building our model off of. 
+# Mini-AlphaGo, Winter 2025
 
-## Usage
+In this project, we will build a modified hybrid of [AlphaGo](https://www.nature.com/articles/nature16961) and [AlphaZero](https://www.nature.com/articles/nature24270) for 9x9 Go from almost scratch (using only computational libraries).
+
+## Schedule (up to today)
+
+| **Week** | **Links** |
+| --- | --- |
+| 1 | [Slides](https://docs.google.com/presentation/d/1-xUB_iLC-hbhHI7JJtxdNb0yJfJjoJYizdwDDreBi8k/edit?usp=sharing), [Play Online Go](https://online-go.com/), [Computer Go Rules](https://tromp.github.io/go.html)
+| 2 | TBD |
+
+## General Usage
 In board.py there's the Board class, which handles all the logic of playing the game of Go. In elo_calculator.py, there's an Elo_calculator class, which allows you to play to bots against each other, calculate their updated elos, and store them. 
 In the following code:
 ```python

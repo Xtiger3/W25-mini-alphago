@@ -2,15 +2,23 @@
 
 In this project, we will build a modified hybrid of [AlphaGo](https://www.nature.com/articles/nature16961) and [AlphaZero](https://www.nature.com/articles/nature24270) for 9x9 Go from almost scratch (using only computational libraries).
 
-## Schedule (up to today)
+## Schedule
 
 | **Week** | **Links** |
 | --- | --- |
 | 1 | [Slides](https://docs.google.com/presentation/d/1-xUB_iLC-hbhHI7JJtxdNb0yJfJjoJYizdwDDreBi8k/edit?usp=sharing), [Play Online Go](https://online-go.com/), [Computer Go Rules](https://tromp.github.io/go.html)
 | 2 | TBD |
 
+For a more detailed list of topics and resources, see "This Week in Mini-AlphaGo" (approximately every Wednesday).
+
 ## General Usage
-In board.py there's the Board class, which handles all the logic of playing the game of Go. In elo_calculator.py, there's an Elo_calculator class, which allows you to play to bots against each other, calculate their updated elos, and store them. 
+
+`board.py` contains the `Board` class, which is a custom Go board interface written specifically for this project. `Board` handles all the game logic of Go, including moves, captures, end detection, and scoring. The file contains example usage and docstrings for each function.
+
+`elo_calculator.py`, contains the `Elo_calculator` class, which allows you to play to `Bot`s against each other, calculate their updated elos, and store them.
+
+`bot.py` has the basic structure for the `Bot` class, which will be an abstraction for the Go bots we will build that provides a consistent interface for evaluation.
+
 In the following code:
 ```python
 go = Board(9)

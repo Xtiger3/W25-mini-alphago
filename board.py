@@ -18,7 +18,7 @@ class Board:
     board_index = 0
 
 
-    def __init__(self, size: int, move: int = 0) -> None:
+    def __init__(self, size: int, komi: float = 7.5, move: int = 0) -> None:
         if type(size) != int:
             raise TypeError("size must be an int")
 
@@ -32,15 +32,29 @@ class Board:
 
         self.grid = np.zeros((size, size), dtype=int)
         self.num_passes = 0
+        self.komi = komi
 
         self.index = Board.board_index
         Board.board_index += 1
     
 
+    @staticmethod
+    def grid_to_int(grid: NDArray, turn: int):
+        """
+        Base 3 representation: 0 <= int(self) <= 3**(size**2)
+        
+        Args:
+            grid: Board position represented as an numpy array
+            turn: value of the stone to move (1 or 2)
+        """
+
+        return turn + ((3**np.arange(1, grid.shape[0]**2+1, dtype=object)) * grid.flatten()).sum()
+
+
     def __int__(self) -> int:
-        """Base 3 representation: 0 <= int(self) <= 3**(size**2 - 1)"""
-        ##NOTE: Currently doesn't track who's turn it is or if the last turn was a pass
-        return Board.grid_to_int(self.grid)
+        """Base 3 representation: 0 <= int(self) <= 3**(size**2)"""
+
+        return Board.grid_to_int(self.grid, self.move % 2 + 1)
 
 
     def __float__(self) -> float:
@@ -60,58 +74,64 @@ class Board:
         Returns board with the header: 'Board {index} (NxN)'
         and 'Move #{move number}'
         and the NxN grid aligned and composed of
-        of ┼, ├, ┤, ┬, ┴, ┌, ┐, └, ┘, ●, ○
+        of ┼, ├, ┤, ┬, ┴, ┌, ┐, └, ┘, ●, ○ with axis labels
         """
 
-        out = ""
+        out = []
 
+        # Main Headers
         header1 = f"Board {self.index} ({self.size}x{self.size})"
         header2 = f"Move #{self.move}"
 
-        out += " "*((self.size * 2 - 1 - len(header1))//2) + header1 + "\n"
-        out += " "*((self.size * 2 - 1 - len(header2))//2) + header2 + "\n"
+        out.append("   " + " "*((self.size * 2 - 1 - len(header1))//2) + header1)
+        out.append("   " + " "*((self.size * 2 - 1 - len(header2))//2) + header2)
 
+        # Column labels
+        out.append("   " + "".join([f"{i} " for i in range(self.size)]))
+
+        # Main grid
         for i in range(self.size):
+            row = str(i).rjust(2) + " "
             for j in range(self.size):
                 # Add spacing
                 if j > 0:
-                    out += " "
+                    row += " "
 
                 # Stones
                 if self.grid[i, j] == 1:
-                    out += "○"
+                    row += "○"
                     continue
                 elif self.grid[i, j] == 2:
-                    out += "●"
+                    row += "●"
                     continue
                 
                 # Corners
                 if i == 0 and j == 0:
-                    out += "┌"
+                    row += "┌"
                 elif i == 0 and j == self.size - 1:
-                    out += "┐"
+                    row += "┐"
                 elif i == self.size - 1 and j == 0:
-                    out += "└"
+                    row += "└"
                 elif i == self.size - 1 and j == self.size - 1:
-                    out += "┘"
+                    row += "┘"
                 
                 # Edges
                 elif i == 0:
-                    out += "┬"
+                    row += "┬"
                 elif i == self.size - 1:
-                    out += "┴"
+                    row += "┴"
                 elif j == 0:
-                    out += "├"
+                    row += "├"
                 elif j == self.size - 1:
-                    out += "┤"
+                    row += "┤"
                 
                 # Middle
                 else:
-                    out += "┼"
+                    row += "┼"
             
-            out += "\n"
-        
-        return out[:-1]
+            out.append(row)
+
+        return "\n".join(out)
 
     
     def copy(self) -> Self:
@@ -119,11 +139,14 @@ class Board:
 
         res = Board(
             size = self.size,
+            komi = self.komi,
             move = self.move
         )
 
         res.grid = self.grid.copy()
         res.seen = self.seen.copy()
+
+        res.num_passes = self.num_passes
 
         res.groups = [group.copy() for group in self.groups]
 
@@ -137,18 +160,6 @@ class Board:
         """Returns Board constructor to a copy as a string (NON-EVALABLE!!!)"""
 
         return f"Board({self.size}x{self.size}, Move {self.move}, {int(self)})"
-    
-
-    @staticmethod
-    def grid_to_int(grid: NDArray) -> int:
-        """
-        Returns base 3 representation: 0 <= grid_to_int(grid) <= 3**(size**2 - 1)
-
-        Args:
-            grid: square numpy array of ints in [0, 2]
-        """
-
-        return ((3**np.arange(grid.shape[0]**2, dtype=object)) * grid.flatten()).sum()
 
 
     # TODO: Fix very slow algorithm maybe
@@ -270,22 +281,27 @@ class Board:
         return (score[0], score[1])
 
 
-    def play_stone(self, val: int, row: int, col: int, move: bool = True) -> bool:
+    def play_stone(self, row: int, col: int, move: bool = True) -> bool:
         """
         Attempts to place a stone of value val at (row, col)
         
         Returns True if the move is valid, False if not
 
         Args:
-            val: value of the stone to place (1 or 2)
             row: index of the row to place the stone
             col: index of the column to place the stone
             move (optional): whether or not to update the board, default True
         """
 
-        #Update the internal pass checker if a pass was made
-        if move == [-1,-1]:
-            self.num_passes += 1
+        # Compute stone value
+        val = self.move % 2 + 1
+
+        # Handle pass
+        if (row, col) == (-1, -1):
+            if move:
+                self.num_passes += 1
+                self.move += 1
+            
             return True
         else:
             self.num_passes = 0
@@ -372,7 +388,7 @@ class Board:
         candidate_groups = new_candidate_groups
 
         # Prohibit repetition
-        n = Board.grid_to_int(candidate)
+        n = Board.grid_to_int(candidate, val)
         if n in self.seen:
             return False
         
@@ -401,7 +417,7 @@ class Board:
         return np.all(self.grid != 0)
 
 
-    def available_moves_mask(self, val: int) -> NDArray:
+    def available_moves_mask(self) -> NDArray:
         """
         Returns a flat bool array of shape (size**2 + 1, ) indicating
         which moves are available
@@ -411,16 +427,12 @@ class Board:
         
         The bool at index size**2 represents the move pass, which is
             always True
-        
-        Args:
-            val value of the stone to place (1 or 2)
         """
 
         out = np.zeros((self.size**2 + 1, ), dtype=bool)
 
         for i in range(self.size**2):
             available = self.play_stone(
-                val = val,
                 row = i // self.size,
                 col =  i % self.size,
                 move = False
@@ -434,15 +446,12 @@ class Board:
         return out
 
 
-    def available_moves(self, val: int) -> list[tuple[int, int]]:
+    def available_moves(self) -> list[tuple[int, int]]:
         """
         Returns a list of tuples corresponding to the row and
         column indices of available moves
 
         The tuple (-1, -1) corresponds with the move to pass
-
-        Args:
-            val: value of the stone to place (1 or 2)
         """
 
         out = [(-1, -1)] # Players can always pass
@@ -450,7 +459,6 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 available = self.play_stone(
-                    val = val,
                     row = i,
                     col = j,
                     move = False
@@ -461,13 +469,14 @@ class Board:
         
         return out
 
+
     def is_terminal(self) -> bool:
         """
         Returns if this is a terminal node (no possible children)
         """
 
         # Double pass ends the game
-        if self.num_passes >= 2:
+        if self.num_passes == 2:
             return True
 
         # No possible moves ends the game
@@ -500,40 +509,29 @@ class Board:
         raise ValueError(f"Failed to find winner with komi {self.komi}")
 
 
+# Sample Code
 if __name__ == "__main__":
-    curr = 1
-    b = Board(9)
+    board = Board(size = 9)
 
-    def pplay(r, c):
-        global curr
-        if not b.play_stone(curr, r, c):
-            print(f"failed {r}, {c}")
-        print(b)
-        print(f"N groups: {len(b.groups)}")
-        print(f"Curr score: {b.compute_simple_area_score()}\n")
+    while not board.is_terminal():
+        try:
+            print("\nSelect a move")
+            row = int(input("Row: "))
+            col = int(input("Column: "))
 
-        if curr == 1:
-            curr = 2
+            board.play_stone(row, col, True)
+        except KeyboardInterrupt:
+            print("\nKeyboard Interrupt. Game Ended")
+            break
+        except:
+            print("Error while processing move. Try again.")
         else:
-            curr = 1
-    
-    pplay(0, 0)
-    pplay(0, 1)
-    pplay(1, 0)
-    pplay(1, 0)
-    pplay(5, 5)
-    pplay(5, 5)
-    pplay(1, 1)
-    pplay(0, 2)
-    pplay(1, 2)
-    pplay(1, 2)
-    pplay(0, 3)
-    pplay(8, 0)
-    pplay(4, 4)
-    pplay(7, 0)
-    pplay(6, 4)
-    pplay(6, 0)
-    pplay(5, 3)
-    pplay(7, 1)
-    pplay(5, 4)
+            print(board)
+
+    scores = board.compute_simple_area_score()
+
+    print("Stats:")
+    print(f"Player 1 (black) score: {scores[0]}")
+    print(f"Player 2 (white) score: {scores[1]}")
+    print(f"Final score eval: {board.compute_winner()}")
 

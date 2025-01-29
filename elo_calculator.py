@@ -5,10 +5,12 @@ from bot import Bot
 from random import randint
 
 
-'''
-The Elo caluclator class will be a class that manages the playing of agents against each other and the counting of their elo
-'''
 class Elo_calculator:
+    """
+    The Elo caluclator class will be a class that manages the playing
+    of agents against each other and the counting of their elo
+    """
+
     def __init__(self, game: Board, max_elo = 100, prev_elo_data =  None):
         self.game = game
         self.game_root = game
@@ -21,10 +23,11 @@ class Elo_calculator:
             self.load(prev_elo_data)
     
     def register_bot(self, name: str, bot: Bot):
-        '''
+        """
         This function will take in some strategy and name for that strategy, and create a 'player' 
         entry for it so we can track and store its elo
-        '''
+        """
+
         if name in self.players.keys():
             print(f"Error. Name {name} is registered under this elo tracker")
             return 
@@ -36,6 +39,7 @@ class Elo_calculator:
         """
         Save the current instance to a pickle file.
         """
+
         with open(file_path, 'wb') as file:
             pickle.dump(self.__dict__, file)
         print(f"Data saved to {file_path}")
@@ -44,6 +48,7 @@ class Elo_calculator:
         """
         Load data from a pickle file and set it as attributes.
         """
+        
         try:
             with open(file_path, 'rb') as file:
                 data = pickle.load(file)

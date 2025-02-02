@@ -7,7 +7,8 @@ In this project, we will build a modified hybrid of [AlphaGo](https://www.nature
 | **Week** | **Links** |
 | --- | --- |
 | 1 | [Slides](https://docs.google.com/presentation/d/1-xUB_iLC-hbhHI7JJtxdNb0yJfJjoJYizdwDDreBi8k/edit?usp=sharing), [Play Online Go](https://online-go.com/), [Computer Go Rules](https://tromp.github.io/go.html)
-| 2 | TBD |
+| 2 | [Slides](https://docs.google.com/presentation/d/1Tl5gFVL9Pp-qJr6oYB78062bHCQMhRM6sasR86lCWHc/edit?usp=sharing), [NN Arch](https://discovery.ucl.ac.uk/id/eprint/10045895/1/agz_unformatted_nature.pdf#page=27) |
+| 3 | TBD |
 
 For a more detailed list of topics and resources, see "This Week in Mini-AlphaGo" (approximately every Wednesday).
 

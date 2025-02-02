@@ -94,25 +94,23 @@ class GameNode(Board):
         node = self  # through node history
         for i in range(history_length):
             if node is None:
-                empty_board = np.zeros((2, self.size, self.size), dtype=int)
+                empty_board = np.zeros((self.size, self.size), dtype=int)
+                game_data.append(empty_board)
                 game_data.append(empty_board)
                 continue
 
             white_grid = (node.grid == 2).astype(int)
             black_grid = (node.grid == 1).astype(int)
 
-            game_data.append(np.array([white_grid, black_grid]))
+            game_data.append(white_grid)
+            game_data.append(black_grid)
             node = node.prev
 
-        # make an arbitrary array with the length equal to the number of moves made
-        num_moves = 0
-        n = self
-        while n.prev is not None:
-            num_moves += 1
-            n = n.prev
-        game_data.append(np.array([1] * num_moves))
+        # make a 9x9 array filled with 1s
+        turn_mat = np.zeros((self.size, self.size), dtype=int) + (self.move % 2)*2-1
+        game_data.append(turn_mat)
 
-        return game_data
+        return np.array(game_data)
 
 
 if __name__ == "__main__":
@@ -126,6 +124,7 @@ if __name__ == "__main__":
 
             board = board.create_child((row, col))
             print(board.get_game_data())
+            print(board.get_game_data().shape)
 
         except KeyboardInterrupt:
             print("\nKeyboard Interrupt. Game Ended")

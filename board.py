@@ -11,6 +11,7 @@ class Board:
 
     Args:
         size: length of one dimension of the board
+        komi: The komi applied to white's score
         move: move number at current position (default = 0)
     """
 

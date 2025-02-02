@@ -7,10 +7,12 @@ class GameNode(Board):
     Internal class for GameTree
 
     Args:
-        board: Board at the current state
+        size: length of one dimension of the board
+        komi: The komi applied to white's score
+        move: move number at current position (default = 0)
         prev: parent GameNode
+        prev_move: the move played at the parent to make this
         nexts: list of child GameNodes
-        turn: 1 (black) or 2 (white) to move
     """
 
 

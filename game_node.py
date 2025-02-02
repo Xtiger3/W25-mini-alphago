@@ -1,3 +1,4 @@
+import numpy as np
 from typing import Self
 
 from board import Board
@@ -19,11 +20,11 @@ class GameNode(Board):
     def __init__(self, size: int, komi: float = 7.5, move: int = 0,
                  prev: Self = None, prev_move: tuple[int, int] = None,
                  nexts: list[Self] = []):
-        
+
         if komi - int(komi) == 0:
-            raise ValueError(f"Invalid komi {komi}: komi must contain" + 
+            raise ValueError(f"Invalid komi {komi}: komi must contain" +
                              " a fractional tie-breaker")
-        
+
         super().__init__(
             size = size,
             komi = komi,
@@ -83,6 +84,37 @@ class GameNode(Board):
         return child
 
 
+    def get_game_data(self, history_length=3) -> np.array:
+        """
+        Returns a numpy array of white and black board states + past history_length moves
+        """
+
+        game_data = []
+
+        node = self  # through node history
+        for i in range(history_length):
+            if node is None:
+                empty_board = np.zeros((2, self.size, self.size), dtype=int)
+                game_data.append(empty_board)
+                continue
+
+            white_grid = (node.grid == 2).astype(int)
+            black_grid = (node.grid == 1).astype(int)
+
+            game_data.append(np.array([white_grid, black_grid]))
+            node = node.prev
+
+        # make an arbitrary array with the length equal to the number of moves made
+        num_moves = 0
+        n = self
+        while n.prev is not None:
+            num_moves += 1
+            n = n.prev
+        game_data.append(np.array([1] * num_moves))
+
+        return game_data
+
+
 if __name__ == "__main__":
     board = GameNode(size = 9)
 
@@ -93,11 +125,13 @@ if __name__ == "__main__":
             col = int(input("Column: "))
 
             board = board.create_child((row, col))
+            print(board.get_game_data())
+
         except KeyboardInterrupt:
             print("\nKeyboard Interrupt. Game Ended")
             break
-        except:
-            print("Error while processing move. Try again.")
+        # except:
+        #     print("Error while processing move. Try again.")
         else:
             print(board)
 

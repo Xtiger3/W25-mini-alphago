@@ -67,8 +67,17 @@ class GameNode(Board):
         tree invariants. create_child handles the tree components
         while maintaining the same general function
         """
-        
+
         raise Exception("GameNode doesn't support play_stone. Use create_child instead.")
+
+
+    def __bad_play_stone(self, row: int, col: int, move: bool) -> bool:
+        """
+        Board.play_stone passthrough for internal GameNode
+        use only.
+        """
+
+        return super().play_stone(row, col, move)
 
 
     def create_child(self, loc: tuple[int, int]) -> Self:
@@ -83,7 +92,7 @@ class GameNode(Board):
 
         child = self.copy()
 
-        if not child.play_stone(loc[0], loc[1], True):
+        if not child.__bad_play_stone(loc[0], loc[1], True):
             raise ValueError(f"Invalid move location \"{loc}\"")
 
         self.nexts.append(child)

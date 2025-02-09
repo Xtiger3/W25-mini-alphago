@@ -84,15 +84,15 @@ class GameNode(Board):
         return child
 
 
-    def get_game_data(self, history_length=3) -> np.array:
+    def get_game_data(self, lookback=2) -> np.array:
         """
-        Returns a numpy array of white and black board states + past history_length moves
+        Returns a numpy array of white and black board states + past number of historic moves to lookback
         """
 
         game_data = []
 
         node = self  # through node history
-        for i in range(history_length):
+        for i in range(lookback+1):
             if node is None:
                 empty_board = np.zeros((self.size, self.size), dtype=int)
                 game_data.append(empty_board)

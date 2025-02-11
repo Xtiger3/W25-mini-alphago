@@ -67,8 +67,10 @@ class GameNode(Board):
         tree invariants. create_child handles the tree components
         while maintaining the same general function
         """
+        
+        return super().play_stone(row, col, move)
 
-        raise Exception("GameNode doesn't support play_stone. Use create_child instead.")
+        # raise Exception("GameNode doesn't support play_stone. Use create_child instead.")
 
 
     def __bad_play_stone(self, row: int, col: int, move: bool) -> bool:

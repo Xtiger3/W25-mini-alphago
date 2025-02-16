@@ -1,6 +1,5 @@
 env
 __pycache__
-*.sgf
 *.pt
 *.pkl
 

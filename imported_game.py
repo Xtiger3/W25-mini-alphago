@@ -57,8 +57,8 @@ class ImportedGame:
                 if col >= self.meta["size"] or row >= self.meta["size"]:
                     col = -1
                     row = -1
-                else:
-                    moves.append((row, col))
+                
+                moves.append((row, col))
 
                 turn = 1 if turn == 2 else 2
             

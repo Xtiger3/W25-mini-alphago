@@ -303,7 +303,14 @@ class Board:
                 return self.__play_stone(row, col, False)
         
         # Case 2: No immediate liberties
-        n_liberties = (self.grid[max(0, row-1):min(self.size-1, row+1), max(0, col-1):min(self.size-1, col+1)] == 0).sum() - 1
+        n_liberties = 0
+
+        for i, j in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                if (not (0 <= row + i < self.size)) or (not (0 <= col + j < self.size)):
+                    continue
+
+                n_liberties += self.grid[row + i, col + j] == 0
+
         if n_liberties == 0:
             return self.__play_stone(row, col, False)
 

@@ -503,7 +503,7 @@ class Board:
         for i in range(self.size**2):
             available = self.is_valid_move(
                 row = i // self.size,
-                col =  i % self.size,
+                col = i % self.size,
             )
 
             if available:

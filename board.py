@@ -294,22 +294,19 @@ class Board:
         if self.grid[row, col] != 0:
             return False
         
-        # If capturing, needs play_stone
+        # Check needs play_stone
+        loc = row*self.size + col
+
+        # Case 1: Capture opponent stone
         for group in self.groups:
-            if group.group_type == val:
-                continue
-            
-            if len(group.liberties - {row*self.size + col}) == 0:
+            if (group.group_type != val) and (len(group.liberties - {loc}) > 0):
                 return self.__play_stone(row, col, False)
         
-        # Prohibit suicide
-        for group in self.groups:
-            if group.group_type == val:
-                continue
+        # Case 2: No immediate liberties
+        n_liberties = (self.grid[max(0, row-1):min(self.size-1, row+1), max(0, col-1):min(self.size-1, col+1)] == 0).sum() - 1
+        if n_liberties == 0:
+            return self.__play_stone(row, col, False)
 
-            if len(group.liberties - {row*self.size + col}) == 0:
-                return False
-        
         return True
 
 

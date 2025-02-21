@@ -67,7 +67,7 @@ class PolicyHead(nn.Module):
         raise NotImplementedError()
     
 
-    def forward(self):
+    def forward(self, x):
         # Return tensor in the shape of (batch, 9*9 + 1)
         raise NotImplementedError()
 
@@ -80,7 +80,7 @@ class ValueHead(nn.Module):
         raise NotImplementedError()
     
 
-    def forward(self):
+    def forward(self, x):
         # Return tensor in the shape of (batch, 1)
         raise NotImplementedError()
 
@@ -93,7 +93,7 @@ class NeuralNet(nn.Module):
         raise NotImplementedError()
     
 
-    def forward(self):
+    def forward(self, x):
         # Return tuple of tensors in the shape ((batch, 9*9 + 1), (batch, 1))
 
         raise NotImplementedError()

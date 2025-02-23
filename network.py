@@ -145,11 +145,17 @@ class NeuralNet(nn.Module):
             *[ResBlock(out_channels, out_channels, kernel, stride) 
               for _ in range(num_residuals)]
         )
+
+        self.policy_head = PolicyHead(64)
+        self.value_head = ValueHead(64)
         
     def forward(self, x):
         x = self.conv(x)
         x = self.residuals(x)
 
+        policy = self.policy_head(x)
+        value = self.value_head(x)
+        
         return x
 
 

@@ -136,8 +136,13 @@ class ValueHead(nn.Module):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, kernel: int, num_residuals=19):
+    def __init__(self):
         super().__init__()
+
+        in_channels = 9
+        out_channels = 71
+        kernel = 3
+        num_residuals = 19
 
         self.conv = ConvBlock(in_channels, out_channels, kernel)
         
@@ -181,7 +186,7 @@ if __name__ == "__main__":
     input_tensor = node_to_tensor(board).unsqueeze(0)
 
     # Create nn and output
-    net_nn = NeuralNet(9, 71, 3, 1)
+    net_nn = NeuralNet()
     out = net_nn.forward(input_tensor)
 
     print(out)

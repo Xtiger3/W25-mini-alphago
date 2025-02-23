@@ -6,7 +6,7 @@ from data_preprocess import node_to_tensor
 
 def human_target_policy(gameNode):
     """ return a board array with a 1 where the human player moved"""
-    target = np.zeros(gameNode.size * gameNode.size + 1)
+    target = np.zeros(gameNode.size * gameNode.size + 1, dtype=float)
 
     # handle pass
     if gameNode.prev_move == (-1, -1) or gameNode.prev_move is None:
@@ -25,7 +25,7 @@ class Dataset:
     def __init__(self, game_directory):
         self.positional_data = []
         self.load_games(game_directory)
-        self.ss, self.zs, self.pis = list(zip(*dataset.positional_data))
+        self.ss, self.zs, self.pis = list(zip(*self.positional_data))
 
     def __len__(self):
         return len(self.positional_data)
@@ -56,4 +56,6 @@ if __name__ == '__main__':
     dataset = Dataset("games")
 
     print(len(dataset.positional_data))
-    print(dataset.positional_data)
+
+    # Do not print this, way too long
+    # print(dataset.positional_data)

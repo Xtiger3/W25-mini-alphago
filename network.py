@@ -136,13 +136,8 @@ class ValueHead(nn.Module):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self):
+    def __init__(self, in_channels: int = 9, out_channels: int = 71, kernel: int = 3, num_residuals: int = 19):
         super().__init__()
-
-        in_channels = 9
-        out_channels = 71
-        kernel = 3
-        num_residuals = 19
 
         self.conv = ConvBlock(in_channels, out_channels, kernel)
         

@@ -33,17 +33,13 @@ class Dataset:
     def __getitem__(self, idx):
         return self.positional_data[idx]
 
-    def parse_game_file(self, game_data):
-        """creates (s, z, 𝛑) tuples from a game file"""
-        game = imported_game.ImportedGame(game_data)
-
     def load_games(self, game_directory):
         for i, game_file in enumerate(dirs := os.listdir(game_directory)):
             print(f"[{i}/{len(dirs)}] Loading game {game_file}")
             filepath = os.path.join(game_directory, game_file)
             this_game = imported_game.ImportedGame(filepath)
 
-            # pare through the game
+            # parse through the game
             node = this_game.linked_list()
             last_human_policy = human_target_policy(node)
             while (node := node.prev) is not None:
@@ -57,8 +53,7 @@ class Dataset:
 
 
 if __name__ == '__main__':
-    dataset = Dataset()
-    dataset.load_games('games')
+    dataset = Dataset("games")
 
     print(len(dataset.positional_data))
     print(dataset.positional_data)

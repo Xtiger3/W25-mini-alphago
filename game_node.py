@@ -94,35 +94,6 @@ class GameNode(Board):
         return child
 
 
-    def get_game_data(self, lookback=2) -> np.array:
-        """
-        Returns a numpy array of white and black board states + past number of historic moves to lookback
-        """
-
-        game_data = []
-
-        node = self  # through node history
-        for i in range(lookback+1):
-            if node is None:
-                empty_board = np.zeros((self.size, self.size), dtype=int)
-                game_data.append(empty_board)
-                game_data.append(empty_board)
-                continue
-
-            white_grid = (node.grid == 2).astype(int)
-            black_grid = (node.grid == 1).astype(int)
-
-            game_data.append(white_grid)
-            game_data.append(black_grid)
-            node = node.prev
-
-        # make a 9x9 array filled with 1s
-        turn_mat = np.zeros((self.size, self.size), dtype=int) + (self.move % 2)*2-1
-        game_data.append(turn_mat)
-
-        return np.array(game_data)
-
-
 if __name__ == "__main__":
     board = GameNode(size = 9)
 

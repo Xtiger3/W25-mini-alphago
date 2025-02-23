@@ -88,6 +88,8 @@ class GameNode(Board):
             raise ValueError(f"Invalid move location \"{loc}\"")
 
         self.nexts.append(child)
+
+        child.nexts = []
         child.prev = self
         child.prev_move = loc
 

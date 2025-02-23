@@ -137,17 +137,15 @@ class NeuralNet(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel: int, stride: int, num_residuals=19):
         super().__init__()
 
-        assert(kernel % 2 == 1) 
-
         self.conv = ConvBlock(in_channels, out_channels, kernel, stride)
         
         self.residuals = nn.Sequential(
-            *[ResBlock(out_channels, out_channels, kernel, stride) 
+            *[ResBlock(out_channels, kernel) 
               for _ in range(num_residuals)]
         )
 
-        self.policy_head = PolicyHead(64)
-        self.value_head = ValueHead(64)
+        self.policy_head = PolicyHead(out_channels)
+        self.value_head = ValueHead(out_channels)
         
     def forward(self, x):
         x = self.conv(x)

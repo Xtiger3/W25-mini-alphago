@@ -1,5 +1,7 @@
 import torch.nn as nn
 import torch
+from game_node import GameNode
+from data_preprocess import node_to_tensor
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel: int):
@@ -134,10 +136,10 @@ class ValueHead(nn.Module):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, kernel: int, stride: int, num_residuals=19):
+    def __init__(self, in_channels: int, out_channels: int, kernel: int, num_residuals=19):
         super().__init__()
 
-        self.conv = ConvBlock(in_channels, out_channels, kernel, stride)
+        self.conv = ConvBlock(in_channels, out_channels, kernel)
         
         self.residuals = nn.Sequential(
             *[ResBlock(out_channels, kernel) 
@@ -156,9 +158,34 @@ class NeuralNet(nn.Module):
 
         return policy, value
 
-
 if __name__ == "__main__":
-    model = NeuralNet()
+    # Defining board and running game
+    board = GameNode(size = 9)
 
-    #TODO: Add code for creating child node of the board, and pass the tensor generated from it through the network
+    while not board.is_terminal():
+        try:
+            print("\nSelect a move")
+            row = int(input("Row: "))
+            col = int(input("Column: "))
+
+            board = board.create_child((row, col))
+        except KeyboardInterrupt:
+            print("\nKeyboard Interrupt. Game Ended")
+            break
+        except:
+            print("Error while processing move. Try again.")
+        else:
+            print(board)
+        
+    # Make board into tensor
+    input_tensor = node_to_tensor(board).unsqueeze(0)
+
+    # Create nn and output
+    net_nn = NeuralNet(9, 71, 3, 1)
+    out = net_nn.forward(input_tensor)
+
+    print(out)
+
+    print(out[0].shape)
+    print(out[1].shape)
 

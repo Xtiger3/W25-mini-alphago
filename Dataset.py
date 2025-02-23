@@ -22,8 +22,10 @@ def human_target_policy(gameNode):
 
 
 class Dataset:
-    def __init__(self):
+    def __init__(self, game_directory):
         self.positional_data = []
+        self.load_games(game_directory)
+        self.ss, self.zs, self.pis = list(zip(*dataset.positional_data))
 
     def parse_game_file(self, game_data):
         """creates (s, z, 𝛑) tuples from a game file"""
@@ -44,6 +46,8 @@ class Dataset:
                 pi = last_human_policy
                 last_human_policy = human_target_policy(node)
                 self.positional_data.append((s, z, pi))
+
+
 
 
 if __name__ == '__main__':

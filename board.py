@@ -282,8 +282,60 @@ class Board:
         return (score[0], score[1])
 
 
+    def is_valid_move(self, row: int, col: int) -> bool:
+        # Compute stone value
+        val = self.move % 2 + 1
+
+        # Pass is always allowed
+        if (row, col) == (-1, -1):
+            return True
+        
+        # On top of another stone is never allowed
+        if self.grid[row, col] != 0:
+            return False
+        
+        # Check needs play_stone
+        loc = row*self.size + col
+
+        # Case 1: Capture opponent stone
+        for group in self.groups:
+            if (group.group_type != val) and (len(group.liberties - {loc}) > 0):
+                return self.__play_stone(row, col, False)
+        
+        # Case 2: No immediate liberties
+        n_liberties = 0
+
+        for i, j in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                if (not (0 <= row + i < self.size)) or (not (0 <= col + j < self.size)):
+                    continue
+
+                n_liberties += self.grid[row + i, col + j] == 0
+
+        if n_liberties == 0:
+            return self.__play_stone(row, col, False)
+
+        return True
+
+
     def play_stone(self, row: int, col: int, move: bool = True) -> bool:
         """
+        Attempts to place a stone of value val at (row, col)
+        
+        Returns True if the move is valid, False if not
+
+        Args:
+            row: index of the row to place the stone
+            col: index of the column to place the stone
+            move (optional): whether or not to update the board, default True
+        """
+
+        return self.__play_stone(row, col, move)
+
+
+    def __play_stone(self, row: int, col: int, move: bool = True) -> bool:
+        """
+        THIS IS A PRIVATE METHOD! DO NOT USE THIS OUTSIDE BOARD.PY
+
         Attempts to place a stone of value val at (row, col)
         
         Returns True if the move is valid, False if not
@@ -363,10 +415,6 @@ class Board:
             if len(group.liberties) > 0:
                 new_candidate_groups.append(group)
                 continue
-
-            # Remove captured stones from the board
-            for i in group.intersections:
-                candidate[i // self.size, i % self.size] = 0
             
             # Record captures
             captured |= group.intersections
@@ -374,7 +422,7 @@ class Board:
         # Update for newly opened intersections
         for group in candidate_groups:
             group.replenish_liberties(captured)
-        
+
         # Prohibit suicide
         for group in candidate_groups:
             # Skip opposite color
@@ -385,6 +433,10 @@ class Board:
                 return False
             
             new_candidate_groups.append(group)
+
+        # Remove captured stones from the board
+        for i in captured:
+            candidate[i // self.size, i % self.size] = 0
 
         candidate_groups = new_candidate_groups
 
@@ -418,6 +470,29 @@ class Board:
         return np.all(self.grid != 0)
 
 
+    def available_moves(self) -> list[tuple[int, int]]:
+        """
+        Returns a list of tuples corresponding to the row and
+        column indices of available moves
+
+        The tuple (-1, -1) corresponds with the move to pass
+        """
+
+        out = [(-1, -1)] # Players can always pass
+
+        for i in range(self.size):
+            for j in range(self.size):
+                available = self.is_valid_move(
+                    row = i,
+                    col = j
+                )
+
+                if available:
+                    out.append((i, j))
+        
+        return out
+
+
     def available_moves_mask(self) -> NDArray:
         """
         Returns a flat bool array of shape (size**2 + 1, ) indicating
@@ -433,10 +508,9 @@ class Board:
         out = np.zeros((self.size**2 + 1, ), dtype=bool)
 
         for i in range(self.size**2):
-            available = self.play_stone(
+            available = self.is_valid_move(
                 row = i // self.size,
-                col =  i % self.size,
-                move = False
+                col = i % self.size,
             )
 
             if available:
@@ -444,30 +518,6 @@ class Board:
         
         out[-1] = True
 
-        return out
-
-
-    def available_moves(self) -> list[tuple[int, int]]:
-        """
-        Returns a list of tuples corresponding to the row and
-        column indices of available moves
-
-        The tuple (-1, -1) corresponds with the move to pass
-        """
-
-        out = [(-1, -1)] # Players can always pass
-
-        for i in range(self.size):
-            for j in range(self.size):
-                available = self.play_stone(
-                    row = i,
-                    col = j,
-                    move = False
-                )
-
-                if available:
-                    out.append((i, j))
-        
         return out
 
 

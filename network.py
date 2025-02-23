@@ -11,8 +11,8 @@ class ConvBlock(nn.Module):
         self.conv = nn.Conv2d(num_in_channels, num_out_channels, kernel, stride, padding)
         self.norm = nn.BatchNorm2d(num_out_channels)
         self.relu = nn.ReLU()
-    
-    
+
+
     def forward(self, x):
         out = self.conv(x)
         out = self.norm(out)
@@ -39,7 +39,7 @@ class ResBlock(nn.Module):
         out = self.conv1(x)
         out = self.norm1(out)
         out = self.relu(out)
-        out = self.conv2(out) 
+        out = self.conv2(out)
         out = self.norm2(out)
         out = out + x
         out = self.relu(out)

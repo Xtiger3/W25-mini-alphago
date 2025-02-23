@@ -27,6 +27,12 @@ class Dataset:
         self.load_games(game_directory)
         self.ss, self.zs, self.pis = list(zip(*dataset.positional_data))
 
+    def __len__(self):
+        return len(self.positional_data)
+    
+    def __getitem__(self, idx):
+        return self.positional_data[idx]
+
     def parse_game_file(self, game_data):
         """creates (s, z, 𝛑) tuples from a game file"""
         game = imported_game.ImportedGame(game_data)

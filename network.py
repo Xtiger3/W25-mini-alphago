@@ -155,8 +155,8 @@ class NeuralNet(nn.Module):
 
         policy = self.policy_head(x)
         value = self.value_head(x)
-        
-        return x
+
+        return policy, value
 
 
 if __name__ == "__main__":

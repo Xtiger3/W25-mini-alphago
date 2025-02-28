@@ -1,6 +1,7 @@
 from game_node import GameNode
 
 import torch
+from config import *
 
 # TODO: Add function for creating a data tuple from a GameNode
 
@@ -14,7 +15,7 @@ def node_to_tensor(node: GameNode) -> torch.Tensor:
     """
 
     N = node.size
-    LOOKBACK = 4 # Generates the 4*2=8 channels
+    LOOKBACK = MODEL_PARAMS["lookback"] # Generates the 4*2=8 channels
 
     # First LOOKBACK * 2 channels
     out = []

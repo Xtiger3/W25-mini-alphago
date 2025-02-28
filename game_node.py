@@ -15,10 +15,9 @@ class GameNode(Board):
         nexts: list of child GameNodes
     """
 
-
     def __init__(self, size: int, komi: float = 7.5, move: int = 0,
                  prev: Self = None, prev_move: tuple[int, int] = None,
-                 nexts: list[Self] = []):
+                 nexts: list[Self] = [], prior: float = 0):
         
         if komi - int(komi) == 0:
             raise ValueError(f"Invalid komi {komi}: komi must contain" + 
@@ -33,6 +32,11 @@ class GameNode(Board):
         self.prev = prev
         self.prev_move = prev_move
         self.nexts = nexts
+        
+        self.visit_count = 0
+        self.total_action_value = 0
+        self.mean_action_value = 0
+        self.prior = prior
 
 
     def copy(self) -> Self:
@@ -91,8 +95,48 @@ class GameNode(Board):
         self.nexts.append(child)
         child.prev = self
         child.prev_move = loc
+        child.nexts = []
 
         return child
+
+
+    def is_leaf(self):
+        """Check if the node is a leaf (i.e., no children)."""
+        return len(self.nexts) == 0
+
+
+    def is_root(self):
+        """Check if the node is the root of the tree."""
+        return self.prev is None
+
+
+    def ucb_score(self, exploration_weight):
+        """
+        Calculate the Upper Confidence Bound score for this node.
+        
+        Args:
+            exploration_weight: A constant determining the level of exploration.
+        
+        Returns:
+            The Upper Confidence Bound score.
+        """
+        if self.visit_count == 0:
+            return float('inf')  # Ensure unvisited nodes are prioritized
+        exploitation = self.mean_action_value
+        exploration = exploration_weight * self.prior * (self.prev.visit_count ** 0.5) / (1 + self.visit_count)
+        return exploitation + exploration
+
+     
+    def backup(self, value):
+        """
+        Update the node's action value and visit count after a simulation.
+        
+        Args:
+            value: The value obtained from the simulation.
+        """
+        self.visit_count += 1
+        self.total_action_value += value
+        self.mean_action_value = self.total_action_value / self.visit_count
 
 
 if __name__ == "__main__":

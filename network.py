@@ -31,10 +31,9 @@ class ResBlock(nn.Module):
 
         return out
 
-
     
 class ConvBlock(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, kernel: int):
+    def __init__(self, in_channels: int, out_channels: int, kernel: int, stride: int):
         super().__init__()
     
         self.conv = nn.Conv2d(
@@ -59,10 +58,11 @@ class ConvBlock(nn.Module):
 class AlphaZeroNet(nn.Module):
     def __init__(self, in_channels, num_actions):
         super().__init__()
-        self.conv_block = ConvBlock(in_channels, 256, 3, 1)
-        self.res_blocks = nn.Sequential(*[ResBlock(256, 256, 3, 1) for _ in range(19)])
+        # reduce 256 to 64 or 32
+        self.conv_block = ConvBlock(in_channels, 32, 3, 1)
+        self.res_blocks = nn.Sequential(*[ResBlock(32, 32, 3, 1) for _ in range(2)])  # originally 19 in AlphaZero
         self.policy_head = nn.Sequential(
-            nn.Conv2d(256, 2, 1, 1),
+            nn.Conv2d(32, 2, 1, 1),
             nn.BatchNorm2d(2),
             nn.ReLU(),
             nn.Flatten(),
@@ -70,14 +70,14 @@ class AlphaZeroNet(nn.Module):
             # nn.Softmax(dim=1)
         )
         self.value_head = nn.Sequential(
-            nn.Conv2d(256, 1, 1, 1),
+            nn.Conv2d(32, 1, 1, 1),
             nn.BatchNorm2d(1),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(9 * 9, 256),
+            nn.Linear(9 * 9, 32),
             nn.ReLU(),
             # A fully connected linear layer to a scalar
-            nn.Linear(256, 1),
+            nn.Linear(32, 1),
             nn.Tanh()
         )
         self.init_weights()  # Initialize weights
@@ -97,41 +97,6 @@ class AlphaZeroNet(nn.Module):
         policy = self.policy_head(x)
         value = self.value_head(x)
         return policy, value
-
-class ResBlock(nn.Module):
-    def __init__(self, channels: int, kernel: int):
-        super().__init__()
-
-        conv_kwargs = {
-            "in_channels": channels,
-            "out_channels": channels,
-            "kernel_size": kernel,
-            "stride": 1,
-            "padding": "same"
-        }
-
-        self.conv1 = nn.Conv2d(**conv_kwargs)
-        self.norm1 = nn.BatchNorm2d(channels)
-
-        self.conv2 = nn.Conv2d(**conv_kwargs)
-        self.norm2 = nn.BatchNorm2d(channels)
-
-        self.relu = nn.ReLU()
-    
-    
-    def forward(self, x):
-        out = self.conv1(x)
-        out = self.norm1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.norm2(out)
-        
-        out += x
-
-        out = self.relu(out)
-
-        return out
 
 
 class PolicyHead(nn.Module):

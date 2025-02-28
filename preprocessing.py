@@ -28,16 +28,3 @@ def encode(board: GameNode, look_back: int) -> np.ndarray:
 
     return feature_planes
 
-
-board = GameNode(9)
-board = board.create_child((1, 1))
-board = board.create_child((1, 2))
-board = board.create_child((1, 3))
-board = board.create_child((1, 4))
-board = board.create_child((1, 5))
-# print(board.prev)
-encoded_board = encode(board, 3)
-# print(encoded_board)
-print(encoded_board.shape)
-
-# black vs white?

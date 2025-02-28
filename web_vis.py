@@ -9,32 +9,20 @@ from flask import Flask, request, jsonify
 import torch
 
 from game_node import GameNode
-from network import NeuralNet
+from train_helper import restore_checkpoint
+from network import AlphaZeroNet
+from config import *
+# from data_preprocess import encode
 
 from data_preprocess import node_to_tensor
 
-# Model setup
-MODEL_STATE_DICT_PATH = "model.pt" # Update this as needed
-
-model = NeuralNet()
-
-try:
-    model.load_state_dict(torch.load(MODEL_STATE_DICT_PATH, weights_only=True))
-except:
-    print(f"Failed to load model at {MODEL_STATE_DICT_PATH}")
-
-    res = ""
-
-    while res not in list("yn"):
-        res = input("Load random model (y/n)? ")
-        res = res.lower()
-    
-    if res == "n":
-        print("Program exited early: cannot run without model")
-        exit(1)
-
 # Set up game node
 SIZE = 9
+
+model = AlphaZeroNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"])
+
+model, _, _ = restore_checkpoint(model, "checkpoint_dir_9", force=True)
+
 curr_node = GameNode(SIZE)
 
 # Game node utils
@@ -99,6 +87,8 @@ def undo():
 def network():
     global curr_node
 
+    # state_tensor = torch.tensor(encode(curr_node, look_back=MODEL_PARAMS["lookback"])).unsqueeze(0).float()
+    # policy, val = model(state_tensor)
     policy, val = model(node_to_tensor(curr_node).unsqueeze(0))
 
     policy = policy.softmax(1).flatten().detach()

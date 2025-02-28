@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch
 import os
 import itertools
+from imported_game import ImportedGame
+from preprocessing import encode
+import numpy as np
 
 
 def save_checkpoint(model: nn.Module, epoch: int, checkpoint_dir: str, stats: list):
@@ -137,6 +140,43 @@ def clear_checkpoint(checkpoint_dir):
 def calc_loss(policy_pred, value_pred, policy_target, value_target):
     policy_loss = F.cross_entropy(policy_pred, policy_target)
     value_loss = F.mse_loss(value_pred, value_target)
-    return policy_loss + value_loss
+    return policy_loss, value_loss
 
 
+def generate_training_data_from_games(game_paths, game_data, look_back=3):
+    training_data = []
+    
+    for game_path in game_paths:
+        game = ImportedGame(game_path)
+        node = game.linked_list()
+        
+        # Move to the head of the linked list
+        while node.prev is not None:
+            # print(node)
+            node = node.prev
+        
+        # Traverse the game and generate training data
+        while True:
+            if len(node.nexts) == 0:
+                break
+            
+            # Encode the current state
+            encoded_state = encode(node, look_back)
+            
+            # Get the next move (policy)
+            next_node = node.nexts[0]
+            # print(node.nexts)
+            policy = next_node.grid.flatten() - node.grid.flatten()
+            policy[policy > 0] = 1
+            policy = np.append(policy, 0)
+            
+            # Determine the outcome (winner)
+            outcome = game.meta["final_eval"]
+            
+            # Add to training data
+            game_data.append((encoded_state, policy, outcome))
+            
+            # Move to the next node
+            node = next_node
+    
+    # return training_data

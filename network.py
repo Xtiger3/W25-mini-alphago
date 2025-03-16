@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 from game_node import GameNode
 from data_preprocess import node_to_tensor
+from config import *
 
 class ConvBlock(nn.Module):
     def __init__(self, in_channels: int, out_channels: int, kernel: int):
@@ -136,7 +137,7 @@ class ValueHead(nn.Module):
 
 
 class NeuralNet(nn.Module):
-    def __init__(self, in_channels: int = 9, out_channels: int = 71, kernel: int = 3, num_residuals: int = 19):
+    def __init__(self, in_channels: int = INPUT_CHANNELS, out_channels: int = OUTPUT_CHANNELS, kernel: int = KERNEL, num_residuals: int = NUM_RESIDUALS):
         super().__init__()
 
         self.conv = ConvBlock(in_channels, out_channels, kernel)

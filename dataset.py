@@ -5,7 +5,7 @@ from data_preprocess import node_to_tensor
 
 
 def human_target_policy(gameNode):
-    """ return a board array with a 1 where the human player moved"""
+    """Return a board array with a 1 where the human player moved"""
     target = np.zeros(gameNode.size * gameNode.size + 1, dtype=float)
 
     # handle pass
@@ -22,6 +22,7 @@ def human_target_policy(gameNode):
 
 
 class Dataset:
+    "Dataset definition so that pytorch dataloader class can interface with go board data"
     def __init__(self, game_directory):
         self.positional_data = []
         self.load_games(game_directory)
@@ -50,12 +51,3 @@ class Dataset:
                 self.positional_data.append((s, z, pi))
 
 
-
-
-if __name__ == '__main__':
-    dataset = Dataset("games")
-
-    print(len(dataset.positional_data))
-
-    # Do not print this, way too long
-    # print(dataset.positional_data)

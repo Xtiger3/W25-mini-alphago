@@ -1,6 +1,7 @@
 import torch
-from Dataset import Dataset
+from dataset import Dataset
 from network import NeuralNet
+from config import *
 
 class GoLoss(torch.nn.Module):
     def __init__(self):
@@ -14,12 +15,12 @@ class GoLoss(torch.nn.Module):
         return value_loss + policy_loss
 
 
-def train(model, epochs=5, batch_size=32):
+def train(model, epochs=EPOCHS, batch_size=BATCH_SIZE):
     dataset = Dataset("games")
 
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
     criterion = GoLoss()
 
     for epoch in range(epochs):
@@ -34,7 +35,6 @@ def train(model, epochs=5, batch_size=32):
             optimizer.step()
 
             print(f"Epoch {epoch}, Batch {i}: Loss: {loss.item()}")
-    return
 
 
 

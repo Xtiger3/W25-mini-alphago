@@ -1,4 +1,4 @@
-import imported_game
+from imported_game import ImportedGame
 import numpy as np
 import os
 from data_preprocess import node_to_tensor
@@ -22,7 +22,10 @@ def human_target_policy(gameNode):
 
 
 class Dataset:
-    "Dataset definition so that pytorch dataloader class can interface with go board data"
+    """
+    Dataset to interface game data with PyTorch DataLoader
+    """
+
     def __init__(self, game_directory):
         self.positional_data = []
         self.load_games(game_directory)
@@ -38,16 +41,19 @@ class Dataset:
         for i, game_file in enumerate(dirs := os.listdir(game_directory)):
             print(f"[{i}/{len(dirs)}] Loading game {game_file}")
             filepath = os.path.join(game_directory, game_file)
-            this_game = imported_game.ImportedGame(filepath)
+            this_game = ImportedGame(filepath)
 
-            # parse through the game
+            # Iterate through the game
             node = this_game.linked_list()
             last_human_policy = human_target_policy(node)
-            while (node := node.prev) is not None:
+
+            while node is not None:
                 s = node_to_tensor(node)
-                z = this_game.meta.get('final_eval')
+                z = this_game.meta.get("final_eval")
                 pi = last_human_policy
                 last_human_policy = human_target_policy(node)
                 self.positional_data.append((s, z, pi))
+
+                node = node.prev
 
 

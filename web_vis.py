@@ -9,17 +9,16 @@ from flask import Flask, request, jsonify
 import torch
 
 from game_node import GameNode
-from train_helper import restore_checkpoint
-from network import AlphaZeroNet
+# from train_helper import restore_checkpoint
+from network import NeuralNet
 from config import *
-# from data_preprocess import encode
-
 from data_preprocess import node_to_tensor
 
 # Set up game node
 SIZE = 9
 
-model = AlphaZeroNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"])
+model = NeuralNet()
+model.load_state_dict(torch.load("checkpoints/alphazero_model.pth"))
 
 # model, _, _ = restore_checkpoint(model, "checkpoints_9", force=True)
 

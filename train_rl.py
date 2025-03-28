@@ -62,6 +62,8 @@ def self_play(model: AlphaZeroNet, num_games=10, look_back=3):
         
         # Add the game history to the training data
         for state, policy in game_history:
+            print(policy)
+            exit()
             game_data.append((state, policy, outcome))
     
     return game_data
@@ -112,8 +114,8 @@ torch.manual_seed(TRAIN_PARAMS["seed"])
 np.random.seed(TRAIN_PARAMS["seed"])
 
 # # parameters to training
-# num_games = 50
-# num_iter = 10
+num_games = 50
+num_iter = 10
 
 device = torch.device("mps")
 model = AlphaZeroNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"]).to(device)
@@ -126,17 +128,11 @@ board = GameNode(size=9)
 
 # train(model, game_data, batch_size=32, lr=0.001, checkpoint_dir=f"checkpoint_pretrain")
 
-# for i in range(num_iter):
-#     print(f"starting self play {i}...")
-#     game_data = self_play(model, num_games=num_games, look_back=MODEL_PARAMS["lookback"])
-#     print(f"starting train {i}...")
-#     train(model, game_data, batch_size=32, lr=0.01, checkpoint_dir=f"checkpoint_dir_{i}")
+for i in range(num_iter):
+    print(f"starting self play {i}...")
+    game_data = self_play(model, num_games=num_games, look_back=MODEL_PARAMS["lookback"])
+    print(f"starting train {i}...")
+    train(model, game_data, batch_size=32, lr=0.01, checkpoint_dir=f"checkpoint_dir_{i}")
 
 
-tree = MCTS(model)
-board_action_value = tree.run(board)
-print(board_action_value)
-
-max_action = max(board_action_value, key=board_action_value.get)
-print(max_action, board_action_value[max_action])
 

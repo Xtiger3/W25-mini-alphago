@@ -4,9 +4,10 @@ from network import AlphaZeroNet
 from game_node import GameNode
 from data_preprocess import *
 import time
-device = torch.device("cpu")
+import math
+# device = torch.device("cpu")
 
-def expand_and_evaluate(model: AlphaZeroNet, state: GameNode):
+def expand(model: AlphaZeroNet, state: GameNode, action_probabilities: torch.Tensor):
     """
     Expand the node by creating child nodes for each possible action.
     
@@ -17,25 +18,26 @@ def expand_and_evaluate(model: AlphaZeroNet, state: GameNode):
     Returns:
         The value for back up.
     """
-    
-    action_probabilities, value = model(node_to_tensor(state).unsqueeze(0).to(device))
+
     valid_moves = state.available_moves_mask()
-    assert(state.is_leaf())
+    # assert(state.is_leaf())
     
     # TODO: dihedral reflection or rotation selected unifromly at random from i = 1..8
     # TODO: positions in queue are evaluated by the nn using a mini-batch size of 8
     for action, is_valid in enumerate(valid_moves):
         if is_valid:  # Only process valid moves
+            # if action == state.size**2:
+            #     continue
             row = -1 if action == state.size**2 else action // state.size
             col = -1 if action == state.size**2 else action % state.size
             
             # Create the new state for the valid move
             new_state = state.create_child((row, col))
             new_state.prior = action_probabilities[0, action].item()
-            assert(len(new_state.nexts) == 0)
+            # assert(len(new_state.nexts) == 0)
 
     # TODO: the value v is backed up
-    return value
+    # return value
 
 
 def run_mcts_sims(model: AlphaZeroNet, root_state: GameNode, exploration_weight=1.0, num_simulations=100) -> Dict:
@@ -50,7 +52,7 @@ def run_mcts_sims(model: AlphaZeroNet, root_state: GameNode, exploration_weight=
     """
     root = root_state
 
-    for _ in range(num_simulations):
+    for i in range(num_simulations):
         node = root
         search_path = [node]
 
@@ -65,22 +67,23 @@ def run_mcts_sims(model: AlphaZeroNet, root_state: GameNode, exploration_weight=
         # print(node)
         # time.sleep(1)
         
+        # Simulation: Evaluate the leaf node using the neural network
+        with torch.no_grad():
+            action_probabilities, value = model(node_to_tensor(node).unsqueeze(0))
+        if node.prev_move == (-1, -1):
+            value = -math.inf
+
         # Expansion: Expand the leaf node if the game is not over
         if not node.is_terminal():
-            state_tensor = node_to_tensor(node).unsqueeze(0).to(device)
-            with torch.no_grad():
-                # Simulation: Evaluate the leaf node using the neural network
-                action_probs, _ = model(state_tensor)
-                
-            action_probs = action_probs.cpu().squeeze().numpy()
-            value = expand_and_evaluate(model, node)
-            
-            # print(search_path)
-            # Backpropagation: Update the values along the search path
-            for search_node in reversed(search_path):
-                search_node.backup(value)
-        # print()
-        # print()
+            expand(model, node, action_probabilities)
+            # parallelize by running multiple simulations in parallel with batch
+        # else:
+        #     print("board is terminal")
+
+        # Backpropagation: Update the values along the search path
+        for search_node in reversed(search_path):
+            search_node.backup(value)
+ 
         # time.sleep(1)
 
     # Return the visit counts for each action
@@ -88,7 +91,7 @@ def run_mcts_sims(model: AlphaZeroNet, root_state: GameNode, exploration_weight=
     
     
 if __name__ == "__main__":
-    model = AlphaZeroNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"]).to(device)
+    model = AlphaZeroNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"])
     board = GameNode(size=9)
     board_action_value = run_mcts_sims(model, board)
     print(board_action_value, board_action_value[(-1,-1)])

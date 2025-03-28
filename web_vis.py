@@ -21,7 +21,7 @@ SIZE = 9
 
 model = AlphaZeroNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"])
 
-model, _, _ = restore_checkpoint(model, "checkpoint_dir_9", force=True)
+# model, _, _ = restore_checkpoint(model, "checkpoints_9", force=True)
 
 curr_node = GameNode(SIZE)
 

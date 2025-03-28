@@ -1,3 +1,4 @@
+import numpy as np
 from typing import Self
 
 from board import Board
@@ -20,9 +21,9 @@ class GameNode(Board):
                  nexts: list[Self] = [], prior: float = 0):
         
         if komi - int(komi) == 0:
-            raise ValueError(f"Invalid komi {komi}: komi must contain" + 
+            raise ValueError(f"Invalid komi {komi}: komi must contain" +
                              " a fractional tie-breaker")
-        
+
         super().__init__(
             size = size,
             komi = komi,
@@ -93,6 +94,8 @@ class GameNode(Board):
             raise ValueError(f"Invalid move location \"{loc}\"")
 
         self.nexts.append(child)
+
+        child.nexts = []
         child.prev = self
         child.prev_move = loc
         child.nexts = []
@@ -149,11 +152,14 @@ if __name__ == "__main__":
             col = int(input("Column: "))
 
             board = board.create_child((row, col))
+            print(board.get_game_data())
+            print(board.get_game_data().shape)
+
         except KeyboardInterrupt:
             print("\nKeyboard Interrupt. Game Ended")
             break
-        except:
-            print("Error while processing move. Try again.")
+        # except:
+        #     print("Error while processing move. Try again.")
         else:
             print(board)
 

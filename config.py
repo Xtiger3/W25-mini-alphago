@@ -28,3 +28,10 @@ TRAIN_PARAMS = {
 # Checkpoint and logging
 CHECKPOINT_DIR = "checkpoints"
 LOG_DIR = "logs"
+
+
+# network parametrs
+INPUT_CHANNELS = 3 * 2 + 1
+OUTPUT_CHANNELS = 32
+KERNEL = 3
+NUM_RESIDUALS = 2

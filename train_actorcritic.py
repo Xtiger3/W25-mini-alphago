@@ -2,7 +2,7 @@ import numpy as np
 
 import torch
 import warnings
-from network import AlphaZeroNet
+from network import NeuralNet
 
 from game_node import GameNode
 from data_preprocess import *
@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 
 def train():
     # Define the actor and critic networks
-    model = AlphaZeroNet(6 + 1, 9 * 9 + 1)
+    model = NeuralNet()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
     # Main training loop
     num_episodes = 10000

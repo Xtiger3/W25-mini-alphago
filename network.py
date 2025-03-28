@@ -5,7 +5,7 @@ from data_preprocess import node_to_tensor
 from config import *
 
 class ConvBlock(nn.Module):
-    def __init__(self, in_channels: int, out_channels: int, kernel: int, stride: int):
+    def __init__(self, in_channels: int, out_channels: int, kernel: int):
         super().__init__()
     
         self.conv = nn.Conv2d(
@@ -45,6 +45,20 @@ class ResBlock(nn.Module):
         self.norm2 = nn.BatchNorm2d(channels)
 
         self.relu = nn.ReLU()
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.norm1(out)
+        out = self.relu(out)
+
+        out = self.conv2(out)
+        out = self.norm2(out)
+        
+        out += x
+
+        out = self.relu(out)
+
+        return out
 
 class PolicyHead(nn.Module):
     def __init__(self, in_channels: int, board_size=9):

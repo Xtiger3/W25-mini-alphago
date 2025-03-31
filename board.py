@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 from typing import Self
 
 from group import Group
+import torch
 
 class Board:
     """
@@ -184,8 +185,8 @@ class Board:
         filled = set()
 
         for group in self.groups:
-            filled |= group.intersections
-        
+            # filled |= group.intersections
+            filled |= {x.item() if isinstance(x, torch.Tensor) else x for x in group.intersections}
         empty -= filled
 
         # Boundary expansion
@@ -551,14 +552,23 @@ class Board:
         p1_score, p2_score = self.compute_simple_area_score()
 
         p2_score += self.komi
-
+        
         if p1_score > p2_score:
             return 1
         elif p1_score < p2_score:
             return -1
+        else:
+            return 0
         
         raise ValueError(f"Failed to find winner with komi {self.komi}")
+    
+    
+    def early_termination(self) -> bool:
+        p1_score, p2_score = self.compute_simple_area_score()
 
+        p2_score += self.komi
+        
+        return self.move > 30 and abs(p1_score - p2_score) > 30
 
 # Sample Code
 if __name__ == "__main__":

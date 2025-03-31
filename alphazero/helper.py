@@ -4,7 +4,7 @@ import torch
 import os
 import itertools
 from imported_game import ImportedGame
-from preprocessing import encode
+from data_preprocess import *
 import numpy as np
 
 
@@ -92,10 +92,14 @@ def restore_checkpoint(model: nn.Module, checkpoint_dir: str, cuda: bool = False
             clear_checkpoint(checkpoint_dir)
             return model, 0, []
     else:
-        print("Which epoch to load from? Choose in range [1, {}].".format(epoch))
-        inp_epoch = int(input())
-        if inp_epoch not in range(1, epoch + 1):
-            raise Exception("Invalid epoch number")
+        try:
+            print("Which epoch to load from? Choose in range [1, {}].".format(epoch))
+            inp_epoch = int(input())
+            if inp_epoch not in range(1, epoch + 1):
+                raise Exception("Invalid epoch number")
+        except:
+            print("Which epoch to load from?")
+            inp_epoch = int(input())
 
     filename = os.path.join(
         checkpoint_dir, "epoch={}.checkpoint.pth.tar".format(inp_epoch)
@@ -161,7 +165,7 @@ def generate_training_data_from_games(game_paths, game_data, look_back=3):
                 break
             
             # Encode the current state
-            encoded_state = encode(node, look_back)
+            encoded_state = node_to_tensor(node)
             
             # Get the next move (policy)
             next_node = node.nexts[0]

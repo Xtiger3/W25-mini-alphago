@@ -8,8 +8,8 @@ GAME_PARAMS = {
 
 # Model parameters
 MODEL_PARAMS = {
-    "lookback": 3,
-    "in_channels": 3 * 2 + 1,  # 3 * 2 for lookback, 1 for current player
+    "lookback": 4,
+    "in_channels": 4 * 2 + 1,  # 4 * 2 for lookback, 1 for current player
     # "input_size": 9 * 9,  # Example for a 9x9 board
     # "hidden_size": 256,
     # "num_layers": 5,
@@ -31,7 +31,7 @@ LOG_DIR = "logs"
 
 
 # network parametrs
-INPUT_CHANNELS = 3 * 2 + 1
+INPUT_CHANNELS = 4 * 2 + 1
 OUTPUT_CHANNELS = 9 * 9 + 1
 KERNEL = 3
 NUM_RESIDUALS = 2

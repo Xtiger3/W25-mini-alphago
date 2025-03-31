@@ -10,6 +10,7 @@ import torch
 
 from game_node import GameNode
 # from train_helper import restore_checkpoint
+from train_helper import restore_checkpoint
 from network import NeuralNet
 from config import *
 from data_preprocess import node_to_tensor
@@ -18,9 +19,9 @@ from data_preprocess import node_to_tensor
 SIZE = 9
 
 model = NeuralNet()
-model.load_state_dict(torch.load("checkpoints/alphazero_model.pth"))
+# model.load_state_dict(torch.load("checkpoints/alphazero_model8700.pth"))
 
-# model, _, _ = restore_checkpoint(model, "checkpoints_9", force=True)
+model, _, _ = restore_checkpoint(model, "checkpoints", force=True)
 
 curr_node = GameNode(SIZE)
 

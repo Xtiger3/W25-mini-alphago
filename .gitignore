@@ -3,6 +3,7 @@ __pycache__
 *.pt
 *.pkl
 
-/checkpoint*
+*/checkpoint*
+*/*checkpoint*
 
 .DS_Store

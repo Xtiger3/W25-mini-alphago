@@ -528,7 +528,7 @@ class Board:
         """
 
         # Double pass ends the game
-        if self.num_passes == 2:
+        if self.num_passes >= 2:
             return True
 
         # No possible moves ends the game
@@ -551,8 +551,9 @@ class Board:
 
         p1_score, p2_score = self.compute_simple_area_score()
 
-        p2_score += self.komi
-        
+        # p2_score += self.komi
+
+        # print(f"p1_score: {p1_score}, p2_score: {p2_score}")
         if p1_score > p2_score:
             return 1
         elif p1_score < p2_score:

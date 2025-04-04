@@ -2,6 +2,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import csv
 
 
 def hold_training_plot():
@@ -98,3 +99,17 @@ def save_training_plots(base_filename="actorcritic_training"):
     
     plt.figure(2)
     plt.savefig(f"{base_filename}_winrates.png", dpi=200, bbox_inches='tight')
+
+
+def save_stats_to_csv(stats, filename):
+    """Save training statistics to CSV file"""
+    os.makedirs('training_logs', exist_ok=True)
+    filepath = f'training_logs/{filename}.csv'
+    
+    # Convert to dataframe and save
+    df = pd.DataFrame(stats, columns=[
+        'episode', 'reward', 'confidence', 
+        'policy_loss', 'value_loss', 'total_loss',
+        'grad_norm', 'time'
+    ])
+    df.to_csv(filepath, index=False)

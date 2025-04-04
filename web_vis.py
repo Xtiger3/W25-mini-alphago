@@ -10,7 +10,7 @@ import torch
 
 from game_node import GameNode
 # from train_helper import restore_checkpoint
-from train_helper import restore_checkpoint
+from alphazero.helper import restore_checkpoint
 from network import NeuralNet
 from config import *
 from data_preprocess import node_to_tensor

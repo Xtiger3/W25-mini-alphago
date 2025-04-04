@@ -110,6 +110,8 @@ def save_stats_to_csv(stats, filename):
     df = pd.DataFrame(stats, columns=[
         'episode', 'reward', 'confidence', 
         'policy_loss', 'value_loss', 'total_loss',
-        'grad_norm', 'time'
+        'time'
     ])
-    df.to_csv(filepath, index=False)
+
+    header = not os.path.exists(filepath)
+    df.to_csv(filepath, mode='a', index=False, header=header)

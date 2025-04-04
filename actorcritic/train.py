@@ -174,7 +174,7 @@ if __name__ == '__main__':
     
     # TODO: try different learning rates based on the plot (multiply or divide by 2 to ensure learning is happening)
     # decrease learning rate for using small batch sizes
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     num_games = 10000
     gamma = 0.99
     
@@ -187,6 +187,8 @@ if __name__ == '__main__':
     game_len = deque(maxlen=print_freq)
     general_stats = []
     win_stats = []
+
+    start_time = time.time()
     
     # Initial the plot
     (fig1, axes1), (fig2, axes2) = make_training_plots()
@@ -200,6 +202,9 @@ if __name__ == '__main__':
         
         general_stats.append([avg_confidence, total_loss, policy_loss, value_loss])
         update_learning_metrics(axes1, game, general_stats)
+        save_stats_to_csv([[
+            game, game_reward, avg_confidence, policy_loss, value_loss, total_loss, time.time() - start_time
+        ]], "help")
         
         if (game + 1) % print_freq == 0:
             print(f"Episode {game + 1}, Avg Reward: {np.mean(game_rewards) if game_rewards else 0}, Avg Length: {np.mean(game_len) if game_len else 0}")

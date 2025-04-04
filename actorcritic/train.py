@@ -90,6 +90,11 @@ def step(state: GameNode, model: NeuralNet, start: bool, log_probs: list, values
 
 def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bool = True, num_steps=5, gamma=0.99):
     state = GameNode(size=9)
+
+    # slowly increase komi to make the model take advantage of starting first
+    # goes from 0.5 to 7.5 over the course of 10,000 games
+    state.komi = min(0.5 + (game // 1000), 7.5)
+
     episode_reward = 0
     
     # Initialize lists to store trajectory
@@ -138,8 +143,14 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             # Backpropagate
             optimizer.zero_grad()
             total_loss.backward()
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), 0.5)
+            grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=float('inf'))
             optimizer.step()
+
+            save_stats_to_csv([[
+                game, state.move,  # general game info
+                reward, round(sum(move_confidence) / (len(move_confidence) + 1), 3), round((sum(values) / len(values)).item(), 3),  # moves info
+                round(mean_policy_loss.item(), 3), round(mean_value_loss.item(), 3), round(total_loss.item(), 3), grad_norm, round(time.time() - start_time, 1)  # training info
+            ]], "heh")
             
             # Clear buffers
             log_probs = []
@@ -191,7 +202,7 @@ if __name__ == '__main__':
     start_time = time.time()
     
     # Initial the plot
-    (fig1, axes1), (fig2, axes2) = make_training_plots()
+    # (fig1, axes1), (fig2, axes2) = make_training_plots()
     
     for game in range(num_games):
         # run the self play and training
@@ -200,11 +211,8 @@ if __name__ == '__main__':
         game_rewards.append(game_reward)
         game_len.append(length)
         
-        general_stats.append([avg_confidence, total_loss, policy_loss, value_loss])
-        update_learning_metrics(axes1, game, general_stats)
-        save_stats_to_csv([[
-            game, game_reward, avg_confidence, policy_loss, value_loss, total_loss, time.time() - start_time
-        ]], "help")
+        # general_stats.append([avg_confidence, total_loss, policy_loss, value_loss])
+        # update_learning_metrics(axes1, game, general_stats)
         
         if (game + 1) % print_freq == 0:
             print(f"Episode {game + 1}, Avg Reward: {np.mean(game_rewards) if game_rewards else 0}, Avg Length: {np.mean(game_len) if game_len else 0}")
@@ -221,7 +229,7 @@ if __name__ == '__main__':
             old_model = deepcopy(model)
             
             win_stats.append([win_rate_initial, win_rate])
-            update_win_rates(axes2, (game + 1) // save_freq, win_stats)
+            # update_win_rates(axes2, (game + 1) // save_freq, win_stats)
             
             torch.save(model.state_dict(), f"checkpoints/alphazero_model{game + 1}.pth")
             print(f"Saved model at episode {game + 1}")

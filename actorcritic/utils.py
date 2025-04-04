@@ -108,9 +108,9 @@ def save_stats_to_csv(stats, filename):
     
     # Convert to dataframe and save
     df = pd.DataFrame(stats, columns=[
-        'episode', 'reward', 'confidence', 
-        'policy_loss', 'value_loss', 'total_loss',
-        'time'
+        'episode', 'epoch', 
+        'reward', 'confidence', 'value',
+        'policy_loss', 'value_loss', 'total_loss', 'grad_norm', 'time'
     ])
 
     header = not os.path.exists(filepath)

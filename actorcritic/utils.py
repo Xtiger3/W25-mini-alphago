@@ -63,6 +63,7 @@ def update_learning_metrics(axes, episode, stats):
     
     for i in range(4):
         row, col = plot_map[i]
+        axes[row, col].clear()
         axes[row, col].plot(
             range(episode - len(stats) + 1, episode + 1),
             [stat[i] for stat in stats],

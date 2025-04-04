@@ -185,7 +185,7 @@ if __name__ == '__main__':
     
     # TODO: try different learning rates based on the plot (multiply or divide by 2 to ensure learning is happening)
     # decrease learning rate for using small batch sizes
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3/2)
     num_games = 10000
     gamma = 0.99
     
@@ -212,12 +212,15 @@ if __name__ == '__main__':
         game_len.append(length)
         
         general_stats.append([avg_confidence, total_loss, policy_loss, value_loss])
-        update_learning_metrics(axes1, game, general_stats)
         
         if (game + 1) % print_freq == 0:
             print(f"Episode {game + 1}, Avg Reward: {np.mean(game_rewards) if game_rewards else 0}, Avg Length: {np.mean(game_len) if game_len else 0}")
             
         if (game + 1) % save_freq == 0:
+            # only keep the most recent 500 data points
+            general_stats = general_stats[-500:]
+            update_learning_metrics(axes1, game, general_stats)
+
             # Plot win rate vs very first model
             win_rate_initial = evaluator(intial_model, model)
             print(f"Win rate against initial model: {win_rate_initial}")
@@ -233,6 +236,8 @@ if __name__ == '__main__':
             
             torch.save(model.state_dict(), f"checkpoints/alphazero_model{game + 1}.pth")
             print(f"Saved model at episode {game + 1}")
+
+            save_training_plots(f"alphazero_training_{game + 1}")
 
     save_training_plots("alphazero_training_final")
     print("Training complete!")

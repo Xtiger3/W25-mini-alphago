@@ -19,6 +19,9 @@ from utils import *
 
 
 def compute_returns(next_value, rewards, masks, gamma) -> list:
+    # print(len(masks), len(rewards))
+    # print("masks", masks)
+    # print("rewards", rewards)
     r = next_value
     returns = [0] * len(rewards)
     # Loop through the most recent rewards first
@@ -58,7 +61,6 @@ def step(state: GameNode, model: NeuralNet, start: bool, log_probs: list, values
     # Store transition
     log_probs.append(log_prob)
     values.append(value.squeeze())
-    masks.append(1.0 - float(done))
     entropies.append(entropy)
     
     return next_state, action_probs.max().item(), value.squeeze().item(), done
@@ -66,10 +68,11 @@ def step(state: GameNode, model: NeuralNet, start: bool, log_probs: list, values
 
 def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bool = True, num_steps=5, gamma=0.99):
     state = GameNode(size=9)
+    # print("start = ", start)
 
     # slowly increase komi to make the model take advantage of starting first
-    # goes from 0.5 to 7.5 over the course of 10,000 games
-    state.komi = min(0.5 + (game // 1000), 7.5)
+    # goes from 0.5 to 7.5 over the course of training
+    state.komi = min(0.5 + (game // 500), 7.5)
     
     # Initialize lists to store trajectory
     log_probs = []
@@ -99,7 +102,9 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             state = state.create_child((row, col))
             done = state.is_terminal()
         
+        # Store transition
         reward = state.compute_winner() if done else 0
+        masks.append(1.0 - float(done))
         rewards.append(reward)
 
         encoded_state = node_to_tensor(state)
@@ -110,6 +115,7 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             with torch.no_grad():
                 _, next_value = model(state_tensor)
                 next_value = next_value.squeeze()
+                # print("next_value", next_value)
             
             # Compute returns
             returns = torch.tensor(compute_returns(next_value, rewards, masks, gamma))
@@ -118,12 +124,15 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             log_probs_t = torch.stack(log_probs)
             values_t = torch.stack(values)
             entropies_t = torch.stack(entropies)
+            # print("returns", returns)
+            # print("values_t", values_t)
             
             # Compute advantages
             if start:
                 advantages = returns - values_t  # Model is player 1
             else:
                 advantages = (-returns) - (-values_t)  # Model is player 2 (flip perspective)
+            
                 
             avg_advantage = advantages.mean() if avg_advantage == 0 else avg_advantage * 0.9 + advantages.mean() * 0.1
             # advantages = returns - values_t
@@ -134,6 +143,9 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             mean_entropy_loss = entropies_t.mean()
             total_loss = mean_policy_loss + 0.5 * mean_value_loss - 0.01 * mean_entropy_loss
             
+            # print("advantages", advantages)
+            # print("mean_policy_loss", mean_policy_loss)
+            # print("mean_value_loss", mean_value_loss)
             # Backpropagate
             optimizer.zero_grad()
             total_loss.backward()
@@ -147,13 +159,15 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             rewards = []
             masks = []
             entropies = []
+            
+            # time.sleep(10)
         
         if done:
             break
     
     save_stats_to_csv([[
         game, state.move,  # general game info
-        reward, round(avg_move_confidence, 3), round(avg_advantage.item(), 3),  # moves info
+        reward, round(avg_move_confidence, 3), round(values_t.mean().item(), 3), round(avg_advantage.item(), 3),  # moves info
         round(mean_policy_loss.item(), 3), round(mean_value_loss.item(), 3), round(total_loss.item(), 3), 
         round(grad_norm.item(),3), round(time.time() - start_time, 1)  # training info
     ]], "training_log")
@@ -176,18 +190,17 @@ if __name__ == '__main__':
     np.random.seed(TRAIN_PARAMS["seed"])
 
     # Initialize the models
-    intial_model = NeuralNet()
-    old_model = deepcopy(intial_model)
-    model = deepcopy(intial_model)
+    old_model = NeuralNet()
+    model = deepcopy(old_model)
     
     # TODO: try different learning rates based on the plot (multiply or divide by 2 to ensure learning is happening)
     # decrease learning rate for using small batch sizes
-    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3/4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     num_games = 50000
     gamma = 0.99
     
     # New parameters for n-step A2C
-    num_steps = 10   # Number of steps to unroll
+    num_steps = 70   # Number of steps to unroll
     print_freq = 10  # Print frequency
     save_freq = 100  # Save frequency
     
@@ -204,6 +217,8 @@ if __name__ == '__main__':
     (fig1, axes1), (fig2, axes2) = make_training_plots(interative_plot)
     
     for game in range(num_games):
+        komi = min(0.5 + (game // 500), 7.5)
+        
         # run the self play and training
         game_reward, length, avg_confidence, avg_advantage, total_loss = play_against_random(model, optimizer, start = game%2 == 0, num_steps=num_steps, gamma=gamma)
         # game_reward, avg_confidence, policy_loss, value_loss, total_loss = self_play(model, optimizer)
@@ -214,20 +229,20 @@ if __name__ == '__main__':
         
         if (game + 1) % print_freq == 0:
             win_stats.append(np.mean(game_rewards))
-            print(f"Episode {game + 1}, Avg Reward: {np.mean(game_rewards) if game_rewards else 0}, Avg Length: {np.mean(game_len) if game_len else 0}")
+            # print(f"Episode {game + 1}, Avg Reward: {np.mean(game_rewards) if game_rewards else 0}, Avg Length: {np.mean(game_len) if game_len else 0}")
             
         if (game + 1) % save_freq == 0:
             # only keep the most recent 500 data points
             update_learning_metrics(axes1, game, general_stats, win_stats, interative_plot)
 
             # Plot win rate vs very first model
-            win_rate_random = evaluator(intial_model, model)
-            print(f"Win rate against random model: {win_rate_random}")
+            win_rate_random = evaluate_against_random(model, 100, komi)
             
             # Plot win rate vs model from 100 episodes ago
-            win_rate = evaluator(old_model, model)
-            print(f"Win rate against model from {save_freq} episodes ago: {win_rate}")
+            win_rate = evaluator(old_model, model, 100, komi)
 
+            print(f"{game + 1}: win rate vs random: {win_rate_random}\tvs {save_freq} episodes ago: {win_rate}")
+            
             old_model = deepcopy(model)
             
             test_stats.append([win_rate_random, win_rate])

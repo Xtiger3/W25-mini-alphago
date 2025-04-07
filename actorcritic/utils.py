@@ -144,7 +144,7 @@ def save_stats_to_csv(stats, filename):
     # Convert to dataframe and save
     df = pd.DataFrame(stats, columns=[
         'episode', 'epoch', 
-        'reward', 'confidence', 'value',
+        'reward', 'avg_policy_confidence', 'avg_value_est', 'advantage',
         'policy_loss', 'value_loss', 'total_loss', 'grad_norm', 'time'
     ])
 

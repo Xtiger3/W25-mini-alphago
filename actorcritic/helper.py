@@ -17,10 +17,11 @@ def make_random_move(state: GameNode) -> Tuple[int, int]:
     return row, col
 
 
-def evaluator(old_model: NeuralNet, curr_model: NeuralNet, num_games: int = 100):
+def evaluator(old_model: NeuralNet, curr_model: NeuralNet, num_games: int = 100, komi: float = 0.5):
     num_wins = 0
     for game in range(num_games):
         state = GameNode(size=9)  # Initialize a new game
+        state.komi = komi
 
         for move in range(1000):  # Limit the number of moves
             # Encode the board state
@@ -55,10 +56,11 @@ def evaluator(old_model: NeuralNet, curr_model: NeuralNet, num_games: int = 100)
     return num_wins / num_games    
 
 
-def evaluate_against_random(curr_model: NeuralNet, num_games: int = 100):
+def evaluate_against_random(curr_model: NeuralNet, num_games: int = 100, komi: float = 0.5):
     num_wins = 0
     for game in range(num_games):
         state = GameNode(size=9)  # Initialize a new game
+        state.komi = komi
 
         for move in range(1000):  # Limit the number of moves
             # Encode the board state
@@ -74,7 +76,7 @@ def evaluate_against_random(curr_model: NeuralNet, num_games: int = 100):
                     valid_mask = torch.tensor(state.available_moves_mask())
                     action_logits = torch.where(valid_mask, action_logits, -1e8)
                     action_probs = torch.softmax(action_logits, dim=1).squeeze()
-                    action = torch.multinomial(action_probs, num_samples=1).item()
+                    action = torch.distributions.Categorical(action_probs).sample()
 
                 row = -1 if action == 81 else action // 9
                 col = -1 if action == 81 else action % 9

@@ -551,7 +551,7 @@ class Board:
 
         p1_score, p2_score = self.compute_simple_area_score()
 
-        # p2_score += self.komi
+        p2_score += self.komi
 
         # print(f"p1_score: {p1_score}, p2_score: {p2_score}")
         if p1_score > p2_score:

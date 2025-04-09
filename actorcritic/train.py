@@ -72,7 +72,7 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
 
     # slowly increase komi to make the model take advantage of starting first
     # goes from 0.5 to 7.5 over the course of training
-    state.komi = min(0.5 + (game // 500), 7.5)
+    state.komi = komi
     
     # Initialize lists to store trajectory
     log_probs = []
@@ -152,6 +152,13 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
             grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), 100)
             optimizer.step()
 
+            save_stats_to_csv([[
+                game, state.move,  # general game info
+                reward, round(avg_move_confidence, 3), round(values_t.mean().item(), 3), round(avg_advantage.item(), 3),  # moves info
+                round(mean_policy_loss.item(), 3), round(mean_value_loss.item(), 3), round(total_loss.item(), 3), 
+                round(grad_norm.item(),3), round(time.time() - start_time, 1)  # training info
+            ]], "training_log")
+            
             
             # Clear buffers
             log_probs = []
@@ -164,13 +171,6 @@ def play_against_random(model: NeuralNet, optimizer: torch.optim.Adam, start: bo
         
         if done:
             break
-    
-    save_stats_to_csv([[
-        game, state.move,  # general game info
-        reward, round(avg_move_confidence, 3), round(values_t.mean().item(), 3), round(avg_advantage.item(), 3),  # moves info
-        round(mean_policy_loss.item(), 3), round(mean_value_loss.item(), 3), round(total_loss.item(), 3), 
-        round(grad_norm.item(),3), round(time.time() - start_time, 1)  # training info
-    ]], "training_log")
     
     # print(f"advantages: {advantages}")
     # print(f"returns: {returns}")
@@ -190,8 +190,8 @@ if __name__ == '__main__':
     np.random.seed(TRAIN_PARAMS["seed"])
 
     # Initialize the models
-    old_model = NeuralNet()
-    model = deepcopy(old_model)
+    model = NeuralNet()
+    old_model = deepcopy(model)
     
     # TODO: try different learning rates based on the plot (multiply or divide by 2 to ensure learning is happening)
     # decrease learning rate for using small batch sizes
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     gamma = 0.99
     
     # New parameters for n-step A2C
-    num_steps = 70   # Number of steps to unroll
+    num_steps = 10   # Number of steps to unroll
     print_freq = 10  # Print frequency
     save_freq = 100  # Save frequency
     
@@ -215,10 +215,11 @@ if __name__ == '__main__':
     # Initial the plot
     interative_plot = False
     (fig1, axes1), (fig2, axes2) = make_training_plots(interative_plot)
+
+    # komi
+    komi = 2.5
     
     for game in range(num_games):
-        komi = min(0.5 + (game // 500), 7.5)
-        
         # run the self play and training
         game_reward, length, avg_confidence, avg_advantage, total_loss = play_against_random(model, optimizer, start = game%2 == 0, num_steps=num_steps, gamma=gamma)
         # game_reward, avg_confidence, policy_loss, value_loss, total_loss = self_play(model, optimizer)
@@ -241,18 +242,20 @@ if __name__ == '__main__':
             # Plot win rate vs model from 100 episodes ago
             win_rate = evaluator(old_model, model, 100, komi)
 
-            print(f"{game + 1}: win rate vs random: {win_rate_random}\tvs {save_freq} episodes ago: {win_rate}")
+            print(f"win rate vs random: {win_rate_random}\tvs {save_freq} episodes ago: {win_rate}")
             
             old_model = deepcopy(model)
             
             test_stats.append([win_rate_random, win_rate])
-            update_win_rates(axes2, (game + 1) // save_freq, test_stats, interative_plot)
+            update_win_rates(axes2, game, test_stats, interative_plot)
             
             torch.save(model.state_dict(), f"checkpoints/alphazero_model{game + 1}.pth")
             print(f"Saved model at episode {game + 1}")
 
-        if (game + 1) % 500 == 0:
-            save_training_plots(f"alphazero_training_{game + 1}")
+            # GameNode.board_index = 0
 
-    save_training_plots("alphazero_training_final")
+        if (game + 1) % 500 == 0:
+            save_training_plots(f"alphazero_training_{game + 1}", (game+1)//10000)
+
+    save_training_plots("alphazero_training_final", -1)
     print("Training complete!")

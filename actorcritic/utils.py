@@ -17,8 +17,6 @@ def make_training_plots(on=True):
     2. Win rates"""
     if on:
         plt.ion()
-    else:
-        plt.ioff()
     
     # Figure 1: Frequent metrics (updated every episode)
     fig1, axes1 = plt.subplots(2, 2, figsize=(10 , 6))
@@ -82,7 +80,7 @@ def update_learning_metrics(axes, episode, stats, win_stats, on=True):
         # Re-set labels after clear
         axes[row, col].set_xlabel(labels[(row, col)][0])
         axes[row, col].set_ylabel(labels[(row, col)][1])
-    
+
     # Plot win rate separately (less frequent)
     if win_stats:
         row, col = plot_map[3]
@@ -113,7 +111,7 @@ def update_win_rates(axes, episode, stats, on=True):
     
     for i, ax in enumerate(axes):
         ax.plot(
-            range(episode - len(stats) + 1, episode + 1),
+            range(1, episode + 1, 100),
             [stat[i] for stat in stats],
             linestyle='-',
             marker='o',
@@ -127,13 +125,13 @@ def update_win_rates(axes, episode, stats, on=True):
         plt.pause(0.00001)
 
 
-def save_training_plots(base_filename="actorcritic_training"):
+def save_training_plots(base_filename="actorcritic_training", game_number=0):
     """Save both training plots to files."""
     plt.figure(1)
     plt.savefig(f"{base_filename}_metrics.png", dpi=200, bbox_inches='tight')
     
     plt.figure(2)
-    plt.savefig(f"winrates.png", dpi=200, bbox_inches='tight')
+    plt.savefig(f"winrates_{game_number}.png", dpi=200, bbox_inches='tight')
 
 
 def save_stats_to_csv(stats, filename):

@@ -1,12 +1,32 @@
+from copy import deepcopy
+from pathlib import Path
+import torch
+import sys
+import time
+
+
+# Add the parent directory to sys.path
+sys.path.append(str(Path(__file__).parent.parent))
 from network import NeuralNet
 from game_node import GameNode
-from alphazero.helper import *
-import torch
+from helper import *
 from config import *
 from data_preprocess import *
 from mcts import *
-from copy import deepcopy
-import time
+
+def make_random_move(state: GameNode) -> Tuple[int, int]:
+    """Make a random valid move on the board."""
+    valid_mask = torch.tensor(state.available_moves_mask())
+    action_probs = torch.where(valid_mask, torch.ones(1, 82), -math.inf)
+    action_probs = torch.softmax(action_probs, dim=1).squeeze()
+    action = torch.distributions.Categorical(action_probs).sample()
+    print(action_probs)
+    
+    row = -1 if action == 81 else action.item() // 9
+    col = -1 if action == 81 else action.item() % 9
+
+    return row, col
+
 
 def self_play(model: NeuralNet, num_games: int, simulations=100):
     game_history = { 'states': [], 'policies': [], 'outcomes': []}
@@ -66,6 +86,10 @@ def train_model(model, states, policies, values, epochs, batch_size, learning_ra
             policy_loss = criterion_policy(policy_pred, batch_policies)
             value_loss = criterion_value(value_pred, batch_values)
             total_loss = policy_loss + value_loss
+
+            save_stats_to_csv([[iteration, policy_pred.mean().item(), value_pred.mean().item(), policy_loss.item(), value_loss.item(), total_loss.item()]],
+                              ["iteration", "policy pred", "value pred", "policy loss", "value looss", "total loss"],
+                              "training_log")
             
             # Backward pass and optimization
             total_loss.backward()
@@ -99,6 +123,31 @@ def evaluate_model(old_model: NeuralNet, new_model: NeuralNet, num_eval_games: i
     return new_model_wins / num_eval_games
 
 
+def evaluate_model_against_random(new_model: NeuralNet, num_eval_games: int, num_mcts_sims: int = 20):
+    new_model_wins = 0
+    for game in range(num_eval_games):
+        board = GameNode(size=9)
+        # Alternate starting player for each game
+        current_player = game % 2  # 0 for new model, 1 for old model
+        
+        while not board.is_terminal() and not board.early_termination():
+            if current_player == 0:
+                _, board = run_mcts_sims(new_model, board, num_simulations=num_mcts_sims)
+            else:
+                row, col = make_random_move(board)
+                board = board.create_child((row, col))
+            print(board)
+            current_player = 1 - current_player  # Switch players
+
+        outcome = board.compute_winner()
+        if outcome == 1 and current_player == 1:
+            new_model_wins += 1
+        elif outcome == -1 and current_player == 0:
+            new_model_wins += 1
+    
+    return new_model_wins / num_eval_games
+
+
 # device = torch.device("cpu")
 
 if __name__ == "__main__":
@@ -114,9 +163,8 @@ if __name__ == "__main__":
     learning_rate = 0.001
     eval_games = 10
     
-    best_model = NeuralNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"])
-    curr_model = deepcopy(best_model)
-
+    curr_model = NeuralNet(MODEL_PARAMS["in_channels"], GAME_PARAMS["num_actions"])
+    # best_model = deepcopy(curr_model)
 
     for iteration in range(num_iterations):
         print(f"Iteration {iteration + 1}/{num_iterations}")
@@ -130,9 +178,9 @@ if __name__ == "__main__":
         
         # Evaluate the new model
         print("Starting evaluation...")
-        win_rate = evaluate_model(best_model, curr_model, eval_games, 50)
+        win_rate = evaluate_model_against_random(curr_model, eval_games, 50)
         print(f"Win rate against previous model: {win_rate * 100:.2f}%")
         
         # Save the best model
-        if win_rate >= 0.55:  # Only update if the new model is significantly better
-            best_model = deepcopy(curr_model)
+        # if win_rate >= 0.55:  # Only update if the new model is significantly better
+        #     best_model = deepcopy(curr_model)

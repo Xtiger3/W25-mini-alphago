@@ -31,8 +31,8 @@ class GameNode(Board):
         )
 
         self.prev = prev
-        self.prev_move = prev_move
-        self.nexts = nexts
+        # self.prev_move = prev_move
+        # self.nexts = nexts
         
         self.visit_count = 0
         self.total_action_value = 0
@@ -48,8 +48,8 @@ class GameNode(Board):
             komi = self.komi,
             move = self.move,
             prev = self.prev,
-            prev_move = self.prev_move,
-            nexts = self.nexts.copy()
+            # prev_move = self.prev_move,
+            # nexts = self.nexts.copy()
         )
 
         # Board deep copy
@@ -60,8 +60,8 @@ class GameNode(Board):
 
         res.groups = [group.copy() for group in self.groups]
 
-        res.index = Board.board_index
-        Board.board_index += 1
+        # res.index = Board.board_index
+        # Board.board_index += 1
 
         return res
 
@@ -93,19 +93,18 @@ class GameNode(Board):
         if not super(type(child), child).play_stone(loc[0], loc[1], True):
             raise ValueError(f"Invalid move location \"{loc}\"")
 
-        self.nexts.append(child)
+        # self.nexts.append(child)
 
-        child.nexts = []
         child.prev = self
-        child.prev_move = loc
-        child.nexts = []
+        # child.prev_move = loc
+        # child.nexts = []
 
         return child
 
 
-    def is_leaf(self):
-        """Check if the node is a leaf (i.e., no children)."""
-        return len(self.nexts) == 0
+    # def is_leaf(self):
+    #     """Check if the node is a leaf (i.e., no children)."""
+    #     return len(self.nexts) == 0
 
 
     def is_root(self):
@@ -175,6 +174,6 @@ if __name__ == "__main__":
     while board.prev != None:
         board = board.prev
     
-    while len(board.nexts) != 0:
-        print(board)
-        board = board.nexts[0]
+    # while len(board.nexts) != 0:
+    #     print(board)
+    #     board = board.nexts[0]

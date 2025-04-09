@@ -6,6 +6,7 @@ import itertools
 from imported_game import ImportedGame
 from data_preprocess import *
 import numpy as np
+import pandas as pd
 
 
 def save_checkpoint(model: nn.Module, epoch: int, checkpoint_dir: str, stats: list):
@@ -184,3 +185,15 @@ def generate_training_data_from_games(game_paths, game_data, look_back=3):
             node = next_node
     
     # return training_data
+
+
+def save_stats_to_csv(stats, stats_names, filename):
+    """Save training statistics to CSV file"""
+    os.makedirs('training_logs', exist_ok=True)
+    filepath = f'training_logs/{filename}.csv'
+    
+    # Convert to dataframe and save
+    df = pd.DataFrame(stats, columns=stats_names)
+
+    header = not os.path.exists(filepath)
+    df.to_csv(filepath, mode='a', index=False, header=header)

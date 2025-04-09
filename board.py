@@ -17,7 +17,7 @@ class Board:
     """
 
 
-    board_index = 0
+    # board_index = 0
 
 
     def __init__(self, size: int, komi: float = 7.5, move: int = 0) -> None:
@@ -36,8 +36,8 @@ class Board:
         self.num_passes = 0
         self.komi = komi
 
-        self.index = Board.board_index
-        Board.board_index += 1
+        # self.index = Board.board_index
+        # Board.board_index += 1
     
 
     @staticmethod
@@ -152,8 +152,8 @@ class Board:
 
         res.groups = [group.copy() for group in self.groups]
 
-        res.index = Board.board_index
-        Board.board_index += 1
+        # res.index = Board.board_index
+        # Board.board_index += 1
 
         return res
     
